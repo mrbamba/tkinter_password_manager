@@ -39,11 +39,17 @@ def save():
 
     # Clear form
     website_input.delete(0, END)
-    email_input.delete(0, END)
     password_input.delete(0, END)
 
 
 # ---------------------------- UI SETUP ------------------------------- #
+# Get default email to use
+if path.exists(FILE):
+    passwords_file = pandas.read_csv(FILE)
+    email_address = passwords_file.iloc[-1].Email
+else:
+    email_address = ""
+
 # Main window config
 window = Tk()
 window.title("Password Manager")
@@ -68,7 +74,7 @@ email_title = Label(text="Email/Username:", font=FONT)
 email_title.grid(row=2, column=0)
 
 email_input= Entry(width=40)
-email_input.insert(END, "email@gmail.com")
+email_input.insert(END, email_address)
 email_input.grid(row=2, column=1, columnspan=3)
 
 # Password UI config
