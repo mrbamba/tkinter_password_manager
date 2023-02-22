@@ -2,7 +2,8 @@ from tkinter import *
 from tkinter import messagebox
 import pandas
 from os import path
-import random
+from random import choice, randint, shuffle
+import pyperclip
 
 # ---------------------------- CONSTANTS ------------------------------- #
 FONT = ("Ariel", 16, "normal")
@@ -12,26 +13,30 @@ NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 SYMBOLS = ['!', '#', '$', '%', '&', '(', ')', '*', '+']
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
+
+
+def clear_label():
+    notification.config(text="")
+
+
 def generate_password():
-    password = ""
-    nr_letters = random.randint(8, 10)
-    nr_symbols = random.randint(2, 4)
-    nr_numbers = random.randint(2, 4)
-    for char in range(0, nr_letters):
-        # chosen_char = random.randint(0,len(letters)-1)
-        # password+=letters[chosen_char]
-        password += random.choice(LETTERS)
+    # Generate the password
+    password_list = [choice(LETTERS) for i in range(randint(10, 12))]
+    password_list += [choice(NUMBERS) for i in range(randint(2, 4))]
+    password_list += [choice(SYMBOLS) for i in range(randint(2, 4))]
+    shuffle(password_list)
+    password = ''.join(password_list)
 
-    for char in range(0, nr_symbols):
-        password += random.choice(SYMBOLS)
+    # Save the password to the clipboard for immediate usage
+    pyperclip.copy(password)
+    notification.config(text="Password copied to clipboard!")
+    notification.after(3000, clear_label)
 
-    for char in range(0, nr_numbers):
-        password += random.choice(NUMBERS)
-    password_list = list(password)
-    random.shuffle(password_list)
-    result = ''.join(password_list)
+    # Update the password input field in the GUI
     password_input.delete(0, END)
-    password_input.insert(0, result)
+    password_input.insert(0, password)
+
+
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 
 
@@ -125,5 +130,9 @@ password_generate_button.grid(row=3, column=2)
 # Add button UI config
 add_button = Button(text="Add", width=38, command=save)
 add_button.grid(row=4, column=1, columnspan=2)
+
+# Password copied to clipboard notification area
+notification = Label(text="", font=FONT, fg="green")
+notification.grid(row=5, column=0, columnspan=3)
 
 window.mainloop()
