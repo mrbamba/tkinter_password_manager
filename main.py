@@ -2,14 +2,36 @@ from tkinter import *
 from tkinter import messagebox
 import pandas
 from os import path
+import random
 
 # ---------------------------- CONSTANTS ------------------------------- #
 FONT = ("Ariel", 16, "normal")
 FILE = "./pass.csv"
-
+LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+SYMBOLS = ['!', '#', '$', '%', '&', '(', ')', '*', '+']
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
+def generate_password():
+    password = ""
+    nr_letters = random.randint(8, 10)
+    nr_symbols = random.randint(2, 4)
+    nr_numbers = random.randint(2, 4)
+    for char in range(0, nr_letters):
+        # chosen_char = random.randint(0,len(letters)-1)
+        # password+=letters[chosen_char]
+        password += random.choice(LETTERS)
 
+    for char in range(0, nr_symbols):
+        password += random.choice(SYMBOLS)
+
+    for char in range(0, nr_numbers):
+        password += random.choice(NUMBERS)
+    password_list = list(password)
+    random.shuffle(password_list)
+    result = ''.join(password_list)
+    password_input.delete(0, END)
+    password_input.insert(0, result)
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 
 
@@ -28,10 +50,10 @@ def save():
     else:
         # Confirm save
         is_data_correct = messagebox.askokcancel(title=website,
-                                                 message=f"Please verify the data:\n"
-                                                         f"Website: {website}\n"
-                                                         f"Email: {email}\n"
-                                                         f"Password: {password}\n\n"
+                                                 message=f"Please verify the data:\n\n"
+                                                         f"Website:\n{website}\n\n"
+                                                         f"Email:\n{email}\n\n"
+                                                         f"Password:\n{password}\n\n"
                                                          f"Save the info?"
                                                  )
         # Save data is it looks good
@@ -97,7 +119,7 @@ password_title.grid(row=3, column=0)
 password_input = Entry(width=22)
 password_input.grid(row=3, column=1)
 
-password_generate_button = Button(text="Generate Password", width=13)
+password_generate_button = Button(text="Generate Password", width=13, command=generate_password)
 password_generate_button.grid(row=3, column=2)
 
 # Add button UI config
