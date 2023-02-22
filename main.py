@@ -1,6 +1,6 @@
 from tkinter import *
+from tkinter import messagebox
 import pandas
-import os.path
 from os import path
 
 # ---------------------------- CONSTANTS ------------------------------- #
@@ -16,30 +16,43 @@ FILE = "./pass.csv"
 def save():
     # check if file exists and if not then create it
     place_header = not path.exists(FILE)
-    print(place_header)
 
     # Get the data
     website = website_input.get()
     email = email_input.get()
     password = password_input.get()
 
-    # Organize the data
-    data = {
-        'Website': [website],
-        'Email': [email],
-        'Password': [password]
-    }
+    # Validate all fields are filled
+    if len(website) < 1 or len(email) < 1 or len(password) < 1:
+        messagebox.showinfo("Missing fields", "Some of your fields are empty, Try again")
+    else:
+        # Confirm save
+        is_data_correct = messagebox.askokcancel(title=website,
+                                                 message=f"Please verify the data:\n"
+                                                         f"Website: {website}\n"
+                                                         f"Email: {email}\n"
+                                                         f"Password: {password}\n\n"
+                                                         f"Save the info?"
+                                                 )
+        # Save data is it looks good
+        if is_data_correct:
+            # Organize the data
+            data = {
+                'Website': [website],
+                'Email': [email],
+                'Password': [password]
+            }
 
-    # Create DataFrame from data
-    df = pandas.DataFrame(data)
-    print(df)
+            # Create DataFrame from data
+            df = pandas.DataFrame(data)
+            print(df)
 
-    # Append DataFrame to CSV file
-    df. to_csv(FILE, mode='a', index=False, header=place_header)
+            # Append DataFrame to CSV file
+            df. to_csv(FILE, mode='a', index=False, header=place_header)
 
-    # Clear form
-    website_input.delete(0, END)
-    password_input.delete(0, END)
+            # Clear form
+            website_input.delete(0, END)
+            password_input.delete(0, END)
 
 
 # ---------------------------- UI SETUP ------------------------------- #
