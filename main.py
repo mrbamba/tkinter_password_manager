@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 import pandas
+import json
 from os import path
 from random import choice, randint, shuffle
 import pyperclip
@@ -8,9 +9,38 @@ import pyperclip
 # ---------------------------- CONSTANTS ------------------------------- #
 FONT = ("Ariel", 16, "normal")
 FILE = "./pass.csv"
+DEFAULT_EMAIL_FILE = "./default_email.txt"
 LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 SYMBOLS = ['!', '#', '$', '%', '&', '(', ')', '*', '+']
+
+# ---------------------------- EXPORT TO CSV ------------------------------- #
+
+
+def export():
+    # Checking for saved data
+    try:
+        with open("data.json", "r") as data_file:
+            data = json.load(data_file)
+
+    # If no saved data then notifying the user
+    except FileNotFoundError:
+        messagebox.showinfo("No passwords saved yet")
+
+    # If there is saved data then
+    else:
+        # Creating pandas dataframe
+        df = pandas.DataFrame.from_dict(data, orient="index")
+
+        # Giving the index a name since not present in the json file
+        df.index.name = 'Domain'
+
+        # Saving the DataFrame to file while overwriting past export if one exists
+        df.to_csv(FILE, mode='w', index=True, header=True)
+
+        # Notifying the user the task is done
+        messagebox.showinfo("Downloaded", "File 'pass.csv' downloaded to the main software folder.")
+
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 
@@ -37,6 +67,26 @@ def generate_password():
     password_input.insert(0, password)
 
 
+# ---------------------------- SEARCH PASSWORD ------------------------------- #
+def search_password():
+    search_keyword = website_input.get()
+    try:
+        with open("data.json", "r") as data_file:
+            data = json.load(data_file)
+    except FileNotFoundError:
+        messagebox.showinfo("No passwords saved yet")
+    else:
+        try:
+            result = data[search_keyword]
+            copy_password = messagebox.askokcancel(f"Matching information for {search_keyword}:\n",
+                                f"{search_keyword} information\n\n"
+                                f"Username/Email: {result['Email']}\n\n"
+                                f"Password: \n{result['Password']}\n\n\n"
+                                f"Copy Password to clipboard?")
+            if copy_password:
+                pyperclip.copy(result['Password'])
+        except KeyError:
+            print("Unable to find key")
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 
 
@@ -64,31 +114,52 @@ def save():
         # Save data is it looks good
         if is_data_correct:
             # Organize the data
-            data = {
-                'Website': [website],
-                'Email': [email],
-                'Password': [password]
+            new_data = {
+                website: {
+                    'Email': email,
+                    'Password': password
+                }
             }
 
-            # Create DataFrame from data
-            df = pandas.DataFrame(data)
-            print(df)
+            # Save to json file
+            try:
+                # Try opening the file and see if it exists to read old data
+                with open("data.json", "r") as data_file:
+                    data = json.load(data_file)
 
-            # Append DataFrame to CSV file
-            df. to_csv(FILE, mode='a', index=False, header=place_header)
+            except FileNotFoundError:
+                # if the file does not exist then just dump new data into it
+                with open("data.json", "w") as data_file:
+                    json.dump(new_data, data_file, indent=4)
 
-            # Clear form
-            website_input.delete(0, END)
-            password_input.delete(0, END)
+            else:
+                # If the file existed then update the old data with the new data
+                data.update(new_data)
+                with open("data.json", "w") as data_file:
+                    json.dump(data, data_file, indent=4)
+
+            finally:
+                # Clear form
+                website_input.delete(0, END)
+                password_input.delete(0, END)
+                with open(DEFAULT_EMAIL_FILE, "w") as new_default_email_file:
+                    new_default_email_file.write(email)
 
 
 # ---------------------------- UI SETUP ------------------------------- #
 # Get default email to use
-if path.exists(FILE):
-    passwords_file = pandas.read_csv(FILE)
-    email_address = passwords_file.iloc[-1].Email
+if path.exists(DEFAULT_EMAIL_FILE):
+    with open(DEFAULT_EMAIL_FILE, "r") as default_email_file:
+        email_address = default_email_file.read()
 else:
     email_address = ""
+
+# if path.exists(FILE):
+#     passwords_file = pandas.read_csv(FILE)
+#     email_address = passwords_file.iloc[-1].Email
+# else:
+#     email_address = ""
+
 
 # Main window config
 window = Tk()
@@ -105,9 +176,12 @@ canvas.grid(row=0, column=1)
 website_title = Label(text="Website:", font=FONT)
 website_title.grid(row=1, column=0)
 
-website_input = Entry(width=40)
+website_input = Entry(width=22)
 website_input.focus()
-website_input.grid(row=1, column=1, columnspan=2)
+website_input.grid(row=1, column=1)
+
+website_search = Button(text="Search", width=13, command=search_password)
+website_search.grid(row=1, column=2)
 
 # Email/Username UI Config
 email_title = Label(text="Email/Username:", font=FONT)
@@ -131,8 +205,12 @@ password_generate_button.grid(row=3, column=2)
 add_button = Button(text="Add", width=38, command=save)
 add_button.grid(row=4, column=1, columnspan=2)
 
+# Export button
+export_button = Button(text="Export all data to CSV", width=50, command=export)
+export_button.grid(row=5, column=0, columnspan=3)
+
 # Password copied to clipboard notification area
 notification = Label(text="", font=FONT, fg="green")
-notification.grid(row=5, column=0, columnspan=3)
+notification.grid(row=6, column=0, columnspan=3)
 
 window.mainloop()
