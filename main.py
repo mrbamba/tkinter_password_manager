@@ -10,9 +10,12 @@ import pyperclip
 FONT = ("Ariel", 16, "normal")
 FILE = "./pass.csv"
 DEFAULT_EMAIL_FILE = "./default_email.txt"
-LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+           'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+           'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 SYMBOLS = ['!', '#', '$', '%', '&', '(', ')', '*', '+']
+
 
 # ---------------------------- EXPORT TO CSV ------------------------------- #
 
@@ -74,19 +77,21 @@ def search_password():
         with open("data.json", "r") as data_file:
             data = json.load(data_file)
     except FileNotFoundError:
-        messagebox.showinfo("No passwords saved yet")
+        messagebox.showinfo(title="Error", message="No passwords saved yet")
     else:
-        try:
+        if search_keyword in data:
             result = data[search_keyword]
             copy_password = messagebox.askokcancel(f"Matching information for {search_keyword}:\n",
-                                f"{search_keyword} information\n\n"
-                                f"Username/Email: {result['Email']}\n\n"
-                                f"Password: \n{result['Password']}\n\n\n"
-                                f"Copy Password to clipboard?")
+                                                   f"{search_keyword} information\n\n"
+                                                   f"Username/Email: {result['Email']}\n\n"
+                                                   f"Password: \n{result['Password']}\n\n\n"
+                                                   f"Copy Password to clipboard?")
             if copy_password:
                 pyperclip.copy(result['Password'])
-        except KeyError:
-            print("Unable to find key")
+        else:
+            messagebox.showinfo("No matches", "I looked everywhere but I couldn't find your password, sorry, try again")
+
+
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 
 
@@ -187,7 +192,7 @@ website_search.grid(row=1, column=2)
 email_title = Label(text="Email/Username:", font=FONT)
 email_title.grid(row=2, column=0)
 
-email_input= Entry(width=40)
+email_input = Entry(width=40)
 email_input.insert(END, email_address)
 email_input.grid(row=2, column=1, columnspan=3)
 
@@ -206,7 +211,7 @@ add_button = Button(text="Add", width=38, command=save)
 add_button.grid(row=4, column=1, columnspan=2)
 
 # Export button
-export_button = Button(text="Export all data to CSV", width=50, command=export)
+export_button = Button(text="Export all data to CSV", width=53, command=export)
 export_button.grid(row=5, column=0, columnspan=3)
 
 # Password copied to clipboard notification area
